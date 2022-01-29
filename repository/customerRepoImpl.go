@@ -7,6 +7,7 @@ import (
 	"freq/database"
 	"freq/helper"
 	"freq/models"
+	"github.com/globalsign/mgo"
 	bson2 "github.com/globalsign/mgo/bson"
 	"go.mongodb.org/mongo-driver/bson"
 	"strconv"
@@ -28,7 +29,23 @@ func (c CustomerRepoImpl) Create(customer *models.Customer) error {
 	if err != nil {
 		// ErrNoDocuments means that the filter did not match any documents in the collection
 		if err.Error() == "not found" {
-			err = conn.DB(database.DB).C(database.CUSTOMERS).Insert(customer)
+			// Index
+			index := mgo.Index{
+				Key:        []string{"firstName", "lastName", "email", "infoEmailOptIn"},
+				Unique:     true,
+				DropDups:   true,
+				Background: true,
+				Sparse:     true,
+			}
+
+			coll := conn.DB(database.DB).C(database.CUSTOMERS)
+			err = coll.EnsureIndex(index)
+
+			if err != nil {
+				panic(err)
+			}
+
+			err = coll.Insert(customer)
 
 			if err != nil {
 				return fmt.Errorf("error processing data")

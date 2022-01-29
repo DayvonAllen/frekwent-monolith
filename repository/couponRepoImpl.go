@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"freq/database"
 	"freq/models"
+	"github.com/globalsign/mgo"
 	bson2 "github.com/globalsign/mgo/bson"
 	"go.mongodb.org/mongo-driver/bson"
 	"strconv"
@@ -29,7 +30,23 @@ func (c CouponRepoImpl) Create(coupon *models.Coupon) error {
 			coupon.UpdatedAt = time.Now()
 			coupon.Id = bson2.NewObjectId()
 
-			err = conn.DB(database.DB).C(database.COUPONS).Insert(coupon)
+			// Index
+			index := mgo.Index{
+				Key:        []string{"code"},
+				Unique:     true,
+				DropDups:   true,
+				Background: true,
+				Sparse:     true,
+			}
+
+			coll := conn.DB(database.DB).C(database.COUPONS)
+
+			err = coll.EnsureIndex(index)
+			if err != nil {
+				panic(err)
+			}
+
+			err = coll.Insert(coupon)
 
 			if err != nil {
 				return fmt.Errorf("error processing data")
