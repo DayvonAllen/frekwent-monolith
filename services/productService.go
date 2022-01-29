@@ -135,6 +135,7 @@ func (p DefaultProductService) UpdateIngredients(ingredients *[]string, id bson2
 
 	return product, nil
 }
+
 func (p DefaultProductService) UpdateCategory(category string, id bson2.ObjectId) (*models.Product, error) {
 	product, err := p.repo.UpdateCategory(category, id)
 

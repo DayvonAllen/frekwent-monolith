@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const ADMIN = "admin"
+const ADMIN = "users"
 const PRODUCTS = "products"
 const EMAILS = "emails"
 const COUPONS = "coupons"

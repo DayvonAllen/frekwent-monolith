@@ -8,7 +8,6 @@ import (
 	"freq/router"
 	"github.com/globalsign/mgo/bson"
 	"github.com/robfig/cron/v3"
-	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"os"
@@ -26,23 +25,25 @@ func init() {
 	err := conn.DB(database.DB).C(database.ADMIN).Find(bson.D{{"email", "admin@admin.com"}}).One(&user)
 
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
+		if err.Error() == "not found" {
 			admin := new(models.User)
+			admin.Id = bson.NewObjectId()
 			admin.Email = "admin@admin.com"
 			admin.Username = "admin"
 			admin.Password = "password"
 			admin.CreatedAt = time.Now()
 			admin.UpdatedAt = time.Now()
-
 			hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(admin.Password), bcrypt.DefaultCost)
 			admin.Password = string(hashedPassword)
 
 			err = conn.DB(database.DB).C(database.ADMIN).Insert(admin)
+
 			if err != nil {
 				return
 			}
 		}
 	}
+
 	models.Instance = models.CreateMailer()
 	go models.Instance.ListenForMail()
 
